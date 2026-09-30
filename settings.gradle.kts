@@ -34,3 +34,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "kwideo"
 include(":app")
+include(":desktop")

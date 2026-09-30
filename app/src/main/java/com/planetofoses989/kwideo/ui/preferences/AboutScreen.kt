@@ -383,12 +383,6 @@ object LibrariesScreen : Screen {
 
   private val libraries = listOf(
     LibraryInfo(
-      name = "Kwideo upstream (mpvium)",
-      copyright = "Copyright (c) Aryan447 and contributors",
-      license = "GPL-3.0-or-later — upstream app this fork is based on",
-      url = "https://github.com/Aryan447/mpvium",
-    ),
-    LibraryInfo(
       name = "mpv",
       copyright = "Copyright (c) the mpv contributors",
       license = "GPL-2.0-or-later — playback engine (libmpv)",
@@ -452,7 +446,7 @@ object LibrariesScreen : Screen {
         PreferenceCard {
           Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Text(
-              text = "Kwideo as a whole is distributed under the GNU General Public License v3 or later. Kwideo is a fork of mpvium by Aryan447. See LICENSE in the source repository. Individual components below keep their own licenses.",
+              text = "Kwideo as a whole is distributed under the GNU General Public License v3 or later. See LICENSE in the source repository. Individual components below keep their own licenses.",
               style = MaterialTheme.typography.bodyMedium,
               color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
