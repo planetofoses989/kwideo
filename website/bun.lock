@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "mpvium-website",
+      "name": "kwideo-website",
       "dependencies": {
         "astro": "^7.3.2",
       },

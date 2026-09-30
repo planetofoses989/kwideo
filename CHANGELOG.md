@@ -27,12 +27,13 @@ Source of truth for GitHub release notes.
 
 ### Changed
 
+- Rebranded to Kwideo (package `com.planetofoses989.kwideo`, fork of mpvium by Aryan447, GPL-3.0-or-later with attribution retained).
 - Refreshed app logo artwork and linked Telegram community.
 - Bottom-edge swipes no longer trigger volume/brightness gestures.
 
 ### Fixed
 
-- Launcher icon: smaller play-button foreground to match mpvium proportions.
+- Launcher icon: smaller play-button foreground to match Kwideo proportions.
 - Continue Watching / playtime refreshes instantly on video exit.
 - Seekbar thumb flutter, tap-seek delay, snap-back, and post-seek stall.
 - Seek preview held until seek confirms instead of fixed-delay clear.

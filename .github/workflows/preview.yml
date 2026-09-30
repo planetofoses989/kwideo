@@ -87,7 +87,7 @@ jobs:
           
           for arch in "${apks[@]}"; do
             src="app/build/outputs/apk/standard/preview/app-standard-${arch}-preview.apk"
-            dest="output/mpvium-preview-r${commit_count}-${arch}.apk"
+            dest="output/kwideo-preview-r${commit_count}-${arch}.apk"
             cp "$src" "$dest"
           
             # Get file size in human-readable format

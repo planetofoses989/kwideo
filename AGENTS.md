@@ -2,7 +2,7 @@
 
 ## Project overview
 
-`mpvium` is an Android video player fork based on `mpv-android` and
+`kwideo` is an Android video player fork based on `mpv-android` and
 libmpv. It uses Kotlin, Jetpack Compose, Material 3, Room, Koin, and native
 components for media playback and media analysis.
 
@@ -11,8 +11,8 @@ everyday watching, fully customizable for pros.
 
 The application package and namespace are:
 
-- Application ID: `app.aryan447.mpvium`
-- Android namespace: `app.aryan447.mpvium`
+- Application ID: `com.planetofoses989.kwideo`
+- Android namespace: `com.planetofoses989.kwideo`
 - Minimum SDK: 26
 - Target/compile SDK: 36
 
@@ -22,8 +22,8 @@ production-perfect without running the relevant tests and build checks.
 ## Repository layout
 
 - `app/` — main Android application source, resources, and native playback code.
-- `app/src/main/java/app/aryan447/mpvium/` — Kotlin application source.
-- `app/src/main/java/app/aryan447/mpvium/ui/mediainfo/` — MediaInfo UI/integration.
+- `app/src/main/java/com/planetofoses989/kwideo/` — Kotlin application source.
+- `app/src/main/java/com/planetofoses989/kwideo/ui/mediainfo/` — MediaInfo UI/integration.
 - `gradle/libs.versions.toml` — dependency and plugin versions.
 - `.github/workflows/` — CI, preview, release, and deployment workflows.
 - `fastlane/metadata/` — store metadata and screenshots.

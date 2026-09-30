@@ -1,6 +1,6 @@
-# Contributing to mpvium
+# Contributing to kwideo
 
-Thanks for your interest in contributing to mpvium! This is a community-driven,
+Thanks for your interest in contributing to kwideo! This is a community-driven,
 GPL-licensed Android video player built on mpv / libmpv.
 
 Philosophy: **Sane defaults, pro-level control** — opinionated for everyday
@@ -110,12 +110,12 @@ Be extra careful with C/C++ and JNI under `app/src/main/jni/` (if touched):
 
 - Update `gradle/libs.versions.toml`, not ad-hoc `build.gradle.kts` versions.
 - Verify JitPack / Maven resolution via CI. In particular
-  `mediainfo-lib = "com.github.aryan447:mediainfoAndroid:v1.0.0-fix"`
+  `mediainfo-lib = "com.github.planetofoses989:mediainfoAndroid:v1.0.0-fix"`
   requires the matching Git tag + successful JitPack build upstream.
 
 ## Licensing — important (GPL)
 
-mpvium as a whole is distributed under
+kwideo as a whole is distributed under
 [GPL-3.0-or-later](LICENSE). It links GPL components (mpv, mpv-android,
 FFmpeg); see [NOTICE](NOTICE) for attribution.
 
@@ -137,7 +137,7 @@ If a bug is flavor-specific, state which flavor you tested.
 
 ## Communication
 
-- Join our [Telegram community](https://t.me/mpvium) for tester discussion,
+- Join our [Telegram community](https://github.com/planetofoses989/kwideo/discussions) for tester discussion,
   preview builds, help, and feature ideas.
 - Formal bug reports and feature requests still belong on GitHub Issues
   (see [Issues](#issues)) so they stay tracked.
@@ -145,4 +145,4 @@ If a bug is flavor-specific, state which flavor you tested.
 - Reviewers may ask for smaller scope or screenshots — this is normal.
 - If your PR goes stale, a gentle ping after 7 days is fine.
 
-Thank you for helping make mpvium better!
+Thank you for helping make kwideo better!

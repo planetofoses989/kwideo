@@ -60,7 +60,7 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at
-https://github.com/aryan447/mpvium/issues (open a private security-adjacent
+https://github.com/planetofoses989/kwideo/issues (open a private security-adjacent
 report via GitHub or contact the maintainers through the repository).
 All complaints will be reviewed and investigated promptly and fairly.
 

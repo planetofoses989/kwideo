@@ -47,7 +47,7 @@ import { themes, defaultTheme } from "../data/themes";
       b.addEventListener("click", function () {
         var t = b.getAttribute("data-set-theme");
         document.documentElement.setAttribute("data-theme", t);
-        try { localStorage.setItem("mpvium-theme", t); } catch (e) {}
+        try { localStorage.setItem("kwideo-theme", t); } catch (e) {}
         paint();
       });
     });

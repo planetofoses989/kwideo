@@ -1,0 +1,470 @@
+package com.planetofoses989.kwideo.ui.browser
+
+import android.annotation.SuppressLint
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.unit.dp
+import com.planetofoses989.kwideo.R
+import com.planetofoses989.kwideo.preferences.AppearancePreferences
+import com.planetofoses989.kwideo.preferences.preference.collectAsState
+import com.planetofoses989.kwideo.presentation.Screen
+import com.planetofoses989.kwideo.ui.browser.folderlist.FolderListScreen
+import com.planetofoses989.kwideo.ui.streaming.home.StreamingHomeScreen
+import com.planetofoses989.kwideo.ui.theme.DarkMode
+import com.planetofoses989.kwideo.ui.theme.GlassKind
+import com.planetofoses989.kwideo.ui.theme.LocalGlass
+import com.planetofoses989.kwideo.ui.theme.glassBackdrop
+import com.planetofoses989.kwideo.ui.theme.glassChrome
+import com.planetofoses989.kwideo.ui.theme.glassHazeStyle
+import com.planetofoses989.kwideo.ui.theme.glassNavigationBarItemColors
+import com.planetofoses989.kwideo.ui.theme.glassNavigationRailItemColors
+import com.planetofoses989.kwideo.ui.theme.glassRimBrush
+import com.planetofoses989.kwideo.ui.theme.glassRimColor
+import com.planetofoses989.kwideo.ui.theme.rememberGlassHazeState
+import com.planetofoses989.kwideo.ui.streaming.more.MoreLibraryScreen
+import com.planetofoses989.kwideo.ui.streaming.movies.MoviesGridScreen
+import com.planetofoses989.kwideo.ui.streaming.series.SeriesGridScreen
+import com.planetofoses989.kwideo.ui.utils.LocalBackStack
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.Serializable
+import org.koin.compose.koinInject
+
+@Serializable
+object MainScreen : Screen {
+  // Use a companion object to store state more persistently
+  private var persistentSelectedTab: Int = 0
+
+  // Reactive shared state so observers recompose on change instead of polling.
+  // This avoids a wake-every-frame loop that would keep the CPU awake and
+  // drain battery while MainScreen is composed.
+  private val _hideNavigationBar = MutableStateFlow(false)
+  val hideNavigationBarFlow: StateFlow<Boolean> = _hideNavigationBar.asStateFlow()
+
+  private val _isPermissionDenied = MutableStateFlow(false)
+  val isPermissionDeniedFlow: StateFlow<Boolean> = _isPermissionDenied.asStateFlow()
+
+  private val _tabRequest = MutableStateFlow<Int?>(null)
+
+  /**
+   * Request a tab switch from outside composition (e.g. launcher shortcuts).
+   * Persisted so it survives process recreation, and consumed by [Content].
+   */
+  fun requestTab(index: Int) {
+    val clamped = index.coerceIn(0, 4)
+    persistentSelectedTab = clamped
+    _tabRequest.value = clamped
+  }
+
+  /**
+   * Update selection state and navigation bar visibility
+   * This method should be called whenever selection changes
+   */
+  fun updateSelectionState(
+    isInSelectionMode: Boolean,
+    isOnlyVideosSelected: Boolean,
+    selectionManager: Any?
+  ) {
+    // Only hide navigation bar when videos are selected AND in selection mode.
+    // selectionManager is intentionally untracked: MainScreen never reads it,
+    // keeping the parameter only for API compatibility with callers.
+    _hideNavigationBar.value = isInSelectionMode && isOnlyVideosSelected
+  }
+
+  /**
+   * Update permission state to control FAB visibility
+   */
+  fun updatePermissionState(isDenied: Boolean) {
+    _isPermissionDenied.value = isDenied
+  }
+
+  /**
+   * Get current permission denied state
+   */
+  fun getPermissionDeniedState(): Boolean = _isPermissionDenied.value
+
+  /**
+   * Update bottom navigation bar visibility based on floating bottom bar state
+   */
+  fun updateBottomBarVisibility(shouldShow: Boolean) {
+    _hideNavigationBar.value = !shouldShow
+  }
+
+  @Composable
+  private fun RowScope.BottomNavItems(
+    navItems: List<MainTab>,
+    selectedCanonicalIndex: Int,
+    showLabels: Boolean,
+    onSelectTab: (Int) -> Unit,
+  ) {
+    navItems.forEach { tab ->
+      NavigationBarItem(
+        icon = { Icon(tab.icon, contentDescription = tab.label) },
+        label = if (showLabels) ({ Text(tab.label) }) else null,
+        alwaysShowLabel = showLabels,
+        selected = selectedCanonicalIndex == tab.canonicalIndex,
+        onClick = { onSelectTab(tab.canonicalIndex) },
+        colors = glassNavigationBarItemColors(),
+      )
+    }
+  }
+
+  @Composable
+  @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+  override fun Content() {
+    // Canonical 0..4 tab id (matches launcher shortcuts). The visible list
+    // below may hide tabs, so selection is always stored canonically.
+    var selectedTabId by rememberSaveable {
+      mutableIntStateOf(persistentSelectedTab)
+    }
+
+    val context = LocalContext.current
+    val density = LocalDensity.current
+    val haptic = LocalHapticFeedback.current
+    val backstack = LocalBackStack.current
+
+    val appearancePreferences = koinInject<AppearancePreferences>()
+    val pillNavigationBar by appearancePreferences.pillNavigationBar.collectAsState()
+    val showBottomNavLabels by appearancePreferences.showBottomNavLabels.collectAsState()
+    val enabledBottomTabs by appearancePreferences.bottomNavTabs.collectAsState()
+    val darkMode by appearancePreferences.darkMode.collectAsState()
+    val isGlass = LocalGlass.current
+    val systemDark = isSystemInDarkTheme()
+    val isDark = when (darkMode) {
+      DarkMode.Dark -> true
+      DarkMode.Light -> false
+      DarkMode.System -> systemDark
+    }
+    val glassHaze = rememberGlassHazeState()
+    val glassStyle = glassHazeStyle(isDark = isDark, kind = GlassKind.Bar)
+    val navItems = remember(enabledBottomTabs) {
+      MainTab.visibleTabs(enabledBottomTabs)
+    }
+
+    fun selectTab(index: Int) {
+      if (selectedTabId != index) {
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        selectedTabId = index
+      }
+    }
+
+    // If the selected tab was hidden in settings, fall back to the first
+    // visible tab so content and the indicator never disagree.
+    LaunchedEffect(navItems, selectedTabId) {
+      if (navItems.none { it.canonicalIndex == selectedTabId }) {
+        selectedTabId = navItems.first().canonicalIndex
+      }
+    }
+
+    // Double-press back to exit at the tab root. Deeper screens handle
+    // their own back presses with higher-priority BackHandlers.
+    var lastBackPress by remember { mutableLongStateOf(0L) }
+    BackHandler(enabled = backstack.size == 1) {
+      val now = System.currentTimeMillis()
+      if (now - lastBackPress < 2000) {
+        (context as? android.app.Activity)?.finish()
+      } else {
+        lastBackPress = now
+        android.widget.Toast.makeText(
+          context,
+          context.getString(R.string.press_back_again_to_exit),
+          android.widget.Toast.LENGTH_SHORT,
+        ).show()
+      }
+    }
+
+    // Reactive navigation-bar visibility shared with browser screens.
+    // Previously this was synced via a 16ms polling loop; collecting the
+    // flow suspends until a real change, using zero CPU while idle.
+    val hideNavigationBar by hideNavigationBarFlow.collectAsState()
+    val tabRequest by _tabRequest.collectAsState()
+
+    // Consume any pending external tab request (e.g. launcher shortcut).
+    // A hidden tab falls back to the first visible tab so the bar always
+    // shows a selected indicator.
+    LaunchedEffect(tabRequest, navItems) {
+      tabRequest?.let { requested ->
+        _tabRequest.value = null
+        val target =
+          if (navItems.any { it.canonicalIndex == requested }) {
+            requested
+          } else {
+            navItems.first().canonicalIndex
+          }
+        if (selectedTabId != target) {
+          selectedTabId = target
+        }
+      }
+    }
+
+    // Update persistent state whenever tab changes
+    LaunchedEffect(selectedTabId) {
+      persistentSelectedTab = selectedTabId
+    }
+
+    // Adaptive navigation: rail on tablets / wide screens, bar on phones.
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+      val isWide = maxWidth >= 600.dp
+
+      Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        bottomBar = {
+          if (!isWide) {
+            AnimatedVisibility(
+              visible = !hideNavigationBar,
+              enter = slideInVertically(
+                animationSpec = tween(durationMillis = 300),
+                initialOffsetY = { fullHeight -> fullHeight }
+              ),
+              exit = slideOutVertically(
+                animationSpec = tween(durationMillis = 300),
+                targetOffsetY = { fullHeight -> fullHeight }
+              )
+            ) {
+              if (pillNavigationBar) {
+                // Floating pill bar: detached from screen edges, fully
+                // rounded, with a soft shadow. The capsule Surface owns the
+                // background + shadow while the inner bar stays transparent
+                // with real content padding, so edge items and their
+                // indicator pills never collide with the curved corners.
+                // Window insets are disabled on the bar itself; the outer
+                // padding clears the gesture navigation area instead.
+                Box(
+                  modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 16.dp),
+                  contentAlignment = Alignment.Center,
+                ) {
+                  Surface(
+                    modifier = Modifier.glassChrome(
+                      state = glassHaze,
+                      style = glassStyle,
+                      shape = RoundedCornerShape(32.dp),
+                      enabled = isGlass,
+                    ),
+                    shape = CircleShape,
+                    color = if (isGlass) Color.Transparent else MaterialTheme.colorScheme.surfaceContainer,
+                    tonalElevation = 6.dp,
+                    shadowElevation = 8.dp,
+                    border = if (isGlass) {
+                      BorderStroke(1.dp, glassRimBrush(isDark))
+                    } else {
+                      BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                    },
+                  ) {
+                    NavigationBar(
+                      modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                      containerColor = Color.Transparent,
+                      tonalElevation = 0.dp,
+                      windowInsets = WindowInsets(0, 0, 0, 0),
+                    ) {
+                      BottomNavItems(
+                        navItems = navItems,
+                        selectedCanonicalIndex = selectedTabId,
+                        showLabels = showBottomNavLabels,
+                        onSelectTab = ::selectTab,
+                      )
+                    }
+                  }
+                }
+              } else {
+                NavigationBar(
+                  modifier = Modifier
+                    .clip(
+                      RoundedCornerShape(
+                        topStart = 20.dp,
+                        topEnd = 20.dp,
+                        bottomStart = 0.dp,
+                        bottomEnd = 0.dp
+                      )
+                    )
+                    .glassChrome(
+                      state = glassHaze,
+                      style = glassStyle,
+                      shape = RoundedCornerShape(
+                        topStart = 20.dp,
+                        topEnd = 20.dp,
+                        bottomStart = 0.dp,
+                        bottomEnd = 0.dp
+                      ),
+                      enabled = isGlass,
+                    ),
+                  containerColor = if (isGlass) Color.Transparent else MaterialTheme.colorScheme.surfaceContainer,
+                  tonalElevation = 3.dp
+                ) {
+                  BottomNavItems(
+                    navItems = navItems,
+                    selectedCanonicalIndex = selectedTabId,
+                    showLabels = showBottomNavLabels,
+                    onSelectTab = ::selectTab,
+                  )
+                }
+              }
+            }
+          }
+        }
+      ) { _ ->
+        // NOTE: Scaffold padding is intentionally ignored here (as before):
+        // screens draw edge-to-edge and handle status/navigation insets
+        // themselves, including the manual bottom offset via
+        // LocalNavigationBarHeight.
+        Row(modifier = Modifier.fillMaxSize()) {
+          if (isWide) {
+            AnimatedVisibility(visible = !hideNavigationBar) {
+              NavigationRail(
+                modifier = Modifier.glassChrome(
+                  state = glassHaze,
+                  style = glassHazeStyle(isDark = isDark, kind = GlassKind.Card),
+                  shape = RoundedCornerShape(24.dp),
+                  enabled = isGlass,
+                  rim = true,
+                ),
+                containerColor = if (isGlass) Color.Transparent else MaterialTheme.colorScheme.surface,
+              ) {
+                navItems.forEach { tab ->
+                  NavigationRailItem(
+                    icon = { Icon(tab.icon, contentDescription = tab.label) },
+                    label = if (showBottomNavLabels) ({ Text(tab.label) }) else null,
+                    alwaysShowLabel = showBottomNavLabels,
+                    selected = selectedTabId == tab.canonicalIndex,
+                    onClick = { selectTab(tab.canonicalIndex) },
+                    colors = glassNavigationRailItemColors(),
+                  )
+                }
+              }
+            }
+          }
+          Box(modifier = Modifier.fillMaxSize().weight(1f).glassBackdrop(state = glassHaze, enabled = isGlass)) {
+            val fabBottomPadding = if (isWide) 24.dp else 80.dp
+
+        AnimatedContent(
+          targetState = selectedTabId,
+          transitionSpec = {
+            val slideDistance = with(density) { 48.dp.roundToPx() }
+            val animationDuration = 250
+
+            if (targetState > initialState) {
+              (slideInHorizontally(
+                animationSpec = tween(
+                  durationMillis = animationDuration,
+                  easing = FastOutSlowInEasing
+                ),
+                initialOffsetX = { slideDistance }
+              ) + fadeIn(
+                animationSpec = tween(
+                  durationMillis = animationDuration,
+                  easing = FastOutSlowInEasing
+                )
+              )) togetherWith (slideOutHorizontally(
+                animationSpec = tween(
+                  durationMillis = animationDuration,
+                  easing = FastOutSlowInEasing
+                ),
+                targetOffsetX = { -slideDistance }
+              ) + fadeOut(
+                animationSpec = tween(
+                  durationMillis = animationDuration / 2,
+                  easing = FastOutSlowInEasing
+                )
+              ))
+            } else {
+              (slideInHorizontally(
+                animationSpec = tween(
+                  durationMillis = animationDuration,
+                  easing = FastOutSlowInEasing
+                ),
+                initialOffsetX = { -slideDistance }
+              ) + fadeIn(
+                animationSpec = tween(
+                  durationMillis = animationDuration,
+                  easing = FastOutSlowInEasing
+                )
+              )) togetherWith (slideOutHorizontally(
+                animationSpec = tween(
+                  durationMillis = animationDuration,
+                  easing = FastOutSlowInEasing
+                ),
+                targetOffsetX = { slideDistance }
+              ) + fadeOut(
+                animationSpec = tween(
+                  durationMillis = animationDuration / 2,
+                  easing = FastOutSlowInEasing
+                )
+              ))
+            }
+          },
+          label = "tab_animation"
+        ) { targetTab ->
+          CompositionLocalProvider(
+            LocalNavigationBarHeight provides fabBottomPadding
+          ) {
+            when (targetTab) {
+              0 -> StreamingHomeScreen.Content()
+              1 -> SeriesGridScreen.Content()
+              2 -> MoviesGridScreen.Content()
+              3 -> FolderListScreen.Content()
+              4 -> MoreLibraryScreen.Content()
+            }
+          }
+        }
+          }
+      }
+    }
+  }
+}
+}
+
+// CompositionLocal for navigation bar height
+val LocalNavigationBarHeight = compositionLocalOf { 0.dp }

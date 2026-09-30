@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-mpvium is under active development. Security fixes are provided for the
+kwideo is under active development. Security fixes are provided for the
 latest release and preview builds.
 
 | Version | Supported          |
@@ -19,7 +19,7 @@ User-facing fixes are tracked in [`CHANGELOG.md`](CHANGELOG.md).
 
 Instead, use GitHub's private reporting:
 
-1. Go to https://github.com/aryan447/mpvium/security/advisories/new
+1. Go to https://github.com/planetofoses989/kwideo/security/advisories/new
    (Security tab → Advisories → New draft advisory), or
 2. Open a minimal public issue that says "possible security issue — please
    contact me" without technical details, and maintainers will follow up.
@@ -43,4 +43,4 @@ Please give us reasonable time to fix before public disclosure.
 - `NOTICE` lists third-party licenses — preserve attributions when fixing
   vendored code.
 
-Thank you for helping keep mpvium and its users safe.
+Thank you for helping keep kwideo and its users safe.

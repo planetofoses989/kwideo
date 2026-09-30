@@ -92,7 +92,7 @@ jobs:
           standard_apks=("universal" "arm64-v8a" "armeabi-v7a" "x86" "x86_64")
           for abi in "${standard_apks[@]}"; do
             src="app/build/outputs/apk/standard/release/app-standard-${abi}-release.apk"
-            dst="mpvium-${abi}-${VERSION_TAG}.apk"
+            dst="kwideo-${abi}-${VERSION_TAG}.apk"
             if [ ! -f "$src" ]; then
               echo "::error file=$src::Signed standard APK for $abi was not found"
               exit 1
@@ -103,13 +103,13 @@ jobs:
             echo "$varname=$checksum" >> "$GITHUB_ENV"
           done
 
-          ls -lah mpvium-*.apk
+          ls -lah kwideo-*.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.VERSION_TAG }}
-          name: mpvium ${{ env.VERSION_TAG }}
+          name: kwideo ${{ env.VERSION_TAG }}
           body: |
             ---
             ### Checksums
@@ -123,11 +123,11 @@ jobs:
             | x86_64 | ${{ env.apk_x86_64_sha256 }} |
 
           files: |
-            mpvium-universal-${{ env.VERSION_TAG }}.apk
-            mpvium-arm64-v8a-${{ env.VERSION_TAG }}.apk
-            mpvium-armeabi-v7a-${{ env.VERSION_TAG }}.apk
-            mpvium-x86-${{ env.VERSION_TAG }}.apk
-            mpvium-x86_64-${{ env.VERSION_TAG }}.apk
+            kwideo-universal-${{ env.VERSION_TAG }}.apk
+            kwideo-arm64-v8a-${{ env.VERSION_TAG }}.apk
+            kwideo-armeabi-v7a-${{ env.VERSION_TAG }}.apk
+            kwideo-x86-${{ env.VERSION_TAG }}.apk
+            kwideo-x86_64-${{ env.VERSION_TAG }}.apk
           draft: true
           prerelease: false
         env:

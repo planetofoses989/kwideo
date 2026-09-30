@@ -45,8 +45,8 @@ jobs:
       - name: Send APK to Telegram
         env:
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          # Public destination: https://t.me/mpvium/16 (topic/thread 16).
-          CHAT_ID: "@mpvium"
+          # Public destination: https://t.me/kwideo/16 (topic/thread 16).
+          CHAT_ID: "@kwideo"
           THREAD_ID: "16"
           TAG: ${{ github.event.release.tag_name }}
           NOTES: ${{ github.event.release.body }}

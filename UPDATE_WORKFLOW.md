@@ -3,7 +3,7 @@
 This document describes the complete workflow for keeping the local
 `mpvlibAndroid` library synchronized with upstream `mpv-android`, while
 preserving `mpvlibAndroid`'s custom functionality and updating the downstream
-`mpvium` application.
+`kwideo` application.
 
 ---
 
@@ -15,7 +15,7 @@ The projects are separate Git repositories located next to each other:
 /home/aryan/dev/
 ├── mpv-android/
 ├── mpvlibAndroid/
-├── mpvium/
+├── kwideo/
 └── mediainfoAndroid/
 ```
 
@@ -51,7 +51,7 @@ The dependency flow is:
                                       │
                                       ▼
                        ┌──────────────────────────────┐
-                       │           mpvium             │
+                       │           kwideo             │
                        │     Modern Compose app       │
                        │                              │
                        │ • Jetpack Compose            │
@@ -305,8 +305,8 @@ res/
 
 These generally **do not belong in `mpvlibAndroid`**.
 
-Because `mpvium` has its own Compose-based player architecture, application-level
-features should normally be ported directly into `mpvium`.
+Because `kwideo` has its own Compose-based player architecture, application-level
+features should normally be ported directly into `kwideo`.
 
 ---
 
@@ -1254,21 +1254,21 @@ The resulting AAR should be:
 app/build/outputs/aar/app-release.aar
 ```
 
-Copy it to the `mpvium` project:
+Copy it to the `kwideo` project:
 
 ```bash
 cp app/build/outputs/aar/app-release.aar \
-    /home/aryan/dev/mpvium/app/libs/mpv-android-lib-v0.0.2.aar
+    /home/aryan/dev/kwideo/app/libs/mpv-android-lib-v0.0.2.aar
 ```
 
 ---
 
-# 36. Update `mpvium`
+# 36. Update `kwideo`
 
 Update:
 
 ```text
-mpvium/app/build.gradle.kts
+kwideo/app/build.gradle.kts
 ```
 
 For example:
@@ -1280,19 +1280,19 @@ implementation(files("libs/mpv-android-lib-v0.0.2.aar"))
 Remove the old AAR if it is no longer required:
 
 ```bash
-rm /home/aryan/dev/mpvium/app/libs/mpv-android-lib-v<old-version>.aar
+rm /home/aryan/dev/kwideo/app/libs/mpv-android-lib-v<old-version>.aar
 ```
 
 Then build:
 
 ```bash
-cd /home/aryan/dev/mpvium
+cd /home/aryan/dev/kwideo
 ./gradlew assembleStandardDebug
 ```
 
 ---
 
-# 37. Port Application-Level Features to `mpvium`
+# 37. Port Application-Level Features to `kwideo`
 
 After synchronizing the library, inspect upstream application changes that were
 not copied into `mpvlibAndroid`.
@@ -1312,13 +1312,13 @@ Utils.kt
 TouchGestures.kt
 ```
 
-Determine whether any behavior should be reproduced in `mpvium`.
+Determine whether any behavior should be reproduced in `kwideo`.
 
 Typical destinations:
 
 ```text
-mpvium/.../PlayerViewModel.kt
-mpvium/.../MPVView.kt
+kwideo/.../PlayerViewModel.kt
+kwideo/.../MPVView.kt
 ```
 
 Examples:
@@ -1332,7 +1332,7 @@ MPVActivity.kt
 MPVLib.kt
 ```
 
-Then add the equivalent functionality to the appropriate `mpvium` layer.
+Then add the equivalent functionality to the appropriate `kwideo` layer.
 
 ### New key mappings
 
@@ -1342,7 +1342,7 @@ Inspect:
 KeyMapping.kt
 ```
 
-and update `mpvium` key handling where necessary.
+and update `kwideo` key handling where necessary.
 
 ### New formats/protocols
 
@@ -1386,7 +1386,7 @@ The correct result can simply be:
 No mpvlibAndroid changes required.
 ```
 
-Application-level changes can still be reviewed separately for `mpvium`.
+Application-level changes can still be reviewed separately for `kwideo`.
 
 ---
 
@@ -1472,11 +1472,11 @@ Use this as the normal repeatable process.
 24. Build/publish the AAR.
 
 25. Copy the new AAR to:
-       mpvium/app/libs/
+       kwideo/app/libs/
 
-26. Update mpvium's AAR dependency.
+26. Update kwideo's AAR dependency.
 
-27. Port relevant application-level changes into mpvium.
+27. Port relevant application-level changes into kwideo.
 
 28. Build:
        ./gradlew assembleStandardDebug
@@ -1585,7 +1585,7 @@ git push -u origin sync-upstream
 ## Build consumer app
 
 ```bash
-cd /home/aryan/dev/mpvium
+cd /home/aryan/dev/kwideo
 ./gradlew assembleStandardDebug
 ```
 
@@ -1670,7 +1670,7 @@ Utils.kt
 Upstream application functionality normally belongs in:
 
 ```text
-mpvium
+kwideo
 ```
 
 not:
@@ -1733,11 +1733,11 @@ The synchronization should always be thought of as a three-layer process:
     reusable engine       app features
           │                   │
           ▼                   ▼
-   mpvlibAndroid            mpvium
+   mpvlibAndroid            kwideo
           │
           │ AAR
           ▼
-       mpvium
+       kwideo
 ```
 
 Therefore:
@@ -1749,7 +1749,7 @@ Upstream native/JNI/library change
             ↓
           AAR
             ↓
-          mpvium
+          kwideo
 ```
 
 while:
@@ -1757,11 +1757,11 @@ while:
 ```text
 Upstream UI/application change
             ↓
-          mpvium
+          kwideo
 ```
 
 The core rule is:
 
 > **Synchronize the reusable MPV layer into `mpvlibAndroid`; adapt
-> application-level behavior directly in `mpvium`; never overwrite the custom
+> application-level behavior directly in `kwideo`; never overwrite the custom
 > library layer with the complete upstream application.**
